@@ -156,10 +156,34 @@ def ScrubComments(isc_string):
     return ''
   expanded_comment = False
   for line in isc_string.split('\n'):
+    no_comment_line = ""
+    # Vet out any inline comments
     if( '/*' in line.strip() ):
-      expanded_comment = True
-      isc_list.append(line.split('/*')[0])
-      continue
+      try:
+        striped_line = line.strip()
+        chars = enumerate(striped_line)
+        while True:
+          i, c = chars.next()
+          try:
+            if c == '/' and striped_line[i+1] == '*':
+              expanded_comment = True
+              chars.next()  # Skipp '*'
+              continue
+            elif c == '*' and striped_line[i+1] == '/':
+              expanded_comment = False
+              chars.next()  # Skipp '/'
+              continue
+          except IndexError:
+            continue  # We are at the end of the line
+          if expanded_comment:
+            continue
+          else:
+            no_comment_line += c
+      except StopIteration:
+        if no_comment_line:
+          isc_list.append(no_comment_line)
+        continue
+
     if( expanded_comment ):
       if( '*/' in line.strip() ):
         expanded_comment = False

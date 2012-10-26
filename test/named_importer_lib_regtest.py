@@ -55,6 +55,16 @@ class TestNamedImport(unittest.TestCase):
     self.named_file = open(NAMED_FILE).read()
     self.maxDiff = None
 
+  def testScrubComments01(self):
+    self.assertEqual(iscpy.ScrubComments("/* */foobar"), "foobar")
+
+  def testScrubComments02(self):
+    self.assertEqual(iscpy.ScrubComments("/*\n*/foobar"), "foobar")
+
+  def testScrubComments03(self):
+    self.assertEqual(iscpy.ScrubComments("/*\n*\n*\n*/foobar"), "foobar")
+
+
   def testScrubComments(self):
     self.assertEqual(iscpy.ScrubComments(self.named_file),
                      'options {\ndirectory "/var/domain";\nrecursion yes;\n'
