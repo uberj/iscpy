@@ -2,3 +2,6 @@ svn-commit.tmp
 iscpy.egg-info
 ez_setup
 dist
+*.pyc
+build/
+test/Makefile
