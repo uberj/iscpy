@@ -1,0 +1,14 @@
+Metadata-Version: 1.0
+Name: iscpy
+Version: 1.0.3
+Summary: Python library to parse ISC style config files.
+Home-page: UNKNOWN
+Author: Jacob C. Collins
+Author-email: jc@purdue.edu
+License: BSD
+Description:         ISCpy is a robust ISC config file parser. It has virtually unlimited
+                possibilities for depth and quantity of ISC config files. ISC config
+                files include BIND and DHCP config files among a few others.
+            
+Keywords: isc config bind dhcp parser dns python
+Platform: UNKNOWN
