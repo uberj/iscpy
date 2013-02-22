@@ -70,6 +70,7 @@ def ParseTokens(char_list):
     if( new_char_list[index] == ';' ):
       continuous_line = False
     if( len(new_char_list) > index + 1 and new_char_list[index] == '}' and new_char_list[index + 1] != ';' ):
+      import pdb;pdb.set_trace()
       skip, value = Clip(new_char_list[last_open:])
       temp_list.append({key: copy.deepcopy(ParseTokens(value))})
       continuous_line = True
@@ -239,7 +240,10 @@ def ParseISCString(isc_string):
   Outputs:
     dict: dictionary of ISC file representation
   """
-  return ParseTokens(Explode(ScrubComments(isc_string)))
+  import pdb;pdb.set_trace()
+  y = ScrubComments(isc_string)
+  x = Explode(y)
+  return ParseTokens(x)
 
 def Serialize(isc_string):
   """Makes a pickled string of a dict from an ISC file string
