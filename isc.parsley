@@ -1,0 +1,27 @@
+ws = ' '*
+digit = :d ?(d in '0123456789') -> d
+letter = :c ?('a' <= c <= 'z' or 'A' <= c <= 'Z') -> c
+other = :c ?(c in ('-', '_', '.', "'", '"', ',')) -> c
+
+# value chars (non-meaningful)
+vchars = letter | other | digit
+
+opt_rval = vchars ws | vchars
+opt_lval = vchars
+option = ws 'option' ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
+            -> ('option', lval, rval)
+         | ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
+            -> ('parameter', lval, rval)
+
+options = option*:opts ws -> opts
+
+# IPv4 Addresses
+non_zero = digit:c ?(c != '0') -> c
+octet = <non_zero digit{0,2}>:d ?(int(d) < 256) -> d
+        | '0'
+ipv4_address = <octet '.' octet '.' octet '.' octet>
+
+# Subnet Statement
+subnet_stmt = ws 'subnet' ws ipv4_address:n ws 'netmask' ws ipv4_address:m ws '{'
+                    options:opts
+              '}' -> ('subnet', {'network': n, 'netmask': m, 'body': opts})
