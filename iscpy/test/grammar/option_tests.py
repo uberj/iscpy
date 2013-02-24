@@ -1,49 +1,18 @@
-import parsley
-
 import unittest
-def make_simple(grammar, in_str, scope={}):
-    in_str = in_str.replace('\n', '').strip()
-    x = parsley.makeGrammar(grammar, scope)
-    return x(in_str).S()
 
-class ISCOptionParseTests(unittest.TestCase):
+from iscpy.test.grammar.test_utils import BaseTest, make_simple, pp
+
+class ISCOptionParseTests(BaseTest):
 
     def setUp(self):
-        self.isc_grammar = ""
-        self.stdlib = """
-            ws = ' '*
-            digit = :d ?(d in '0123456789') -> d
-            letter = :c ?('a' <= c <= 'z' or 'A' <= c <= 'Z') -> c
-            other = :c ?(c in ('-', '_', '.', "'", '"', ',')) -> c
+        super(ISCOptionParseTests, self).setUp()
 
-            # value chars (non-meaningful)
-            vchars = letter | other | digit
-
-        """
-        self.isc_grammar += self.stdlib
-
-        self.single_option_grammar = """
-            opt_rval = vchars ws | vchars
-            opt_lval = vchars
-            option = ws 'option' ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
-                        -> ('option', lval, rval)
-                     | ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
-                        -> ('parameter', lval, rval)
-        """
-        self.test_single_option_grammar = self.stdlib + \
-                                          self.single_option_grammar + """
+        self.test_single_option_grammar = self.isc_grammar + """
             S = option
         """
-        self.isc_grammar += self.single_option_grammar
 
-        self.options_grammar = """
+        self.test_options_grammar = self.isc_grammar + """
             options = option*
-        """
-        self.isc_grammar += self.options_grammar
-        self.test_options_grammar = \
-            self.stdlib + \
-            self.single_option_grammar  + \
-            self.options_grammar + """
             S = options
         """
 
@@ -51,9 +20,7 @@ class ISCOptionParseTests(unittest.TestCase):
         """
         Match any char a-Z or secial chars
         """
-        grammar = """
-            letter = :c ?('a' <= c <= 'z' or 'A' <= c <= 'Z') -> c
-            other = :c ?(c in ('-', '_', '.', "'", '"', ',')) -> c
+        grammar = self.isc_grammar + """
             S = letter | other
         """
         self.assertEqual('a', make_simple(grammar, 'a'))
@@ -63,9 +30,7 @@ class ISCOptionParseTests(unittest.TestCase):
         """
         Match multiple char or secial chars
         """
-        grammar = """
-            letter = :c ?('a' <= c <= 'z' or 'A' <= c <= 'Z') -> c
-            other = :c ?(c in ('-', '_', '.', "'", '"', ',')) -> c
+        grammar = self.isc_grammar + """
             all = letter | other
             S = <all*>
         """
@@ -174,7 +139,6 @@ class ISCOptionParseTests(unittest.TestCase):
         )
 
     def test_bracket_option_paramter(self):
-
         test_param = """
             foo  bar;
             option foo-option         10.0.0.5;
@@ -189,6 +153,19 @@ class ISCOptionParseTests(unittest.TestCase):
             make_simple(self.test_options_grammar, test_param)
         )
 
+    def test_equal_in_param(self):
+        test_param = """
+            option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+        """
+
+        self.assertEqual(
+            [(  'parameter',
+                'dhcp-parameter-request-list',
+                'concat(option dhcp-parameter-request-list,d0,d1,d2,d3)')],
+            make_simple(self.test_options_grammar, test_param)
+        )
+
 
 if __name__ == '__main__':
+    import pdb;pdb.set_trace()
     unittest.main()

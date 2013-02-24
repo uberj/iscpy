@@ -1,19 +1,23 @@
+# Quick and dirty hack to parse isc config files
+# Basic
 ws = ' '*
 digit = :d ?(d in '0123456789') -> d
 letter = :c ?('a' <= c <= 'z' or 'A' <= c <= 'Z') -> c
-other = :c ?(c in ('-', '_', '.', "'", '"', ',')) -> c
+other = :c ?(c in ('-', '_', '.', "'", '"', ',', '/', '(', ')', ':')) -> c
 
 # value chars (non-meaningful)
-vchars = letter | other | digit
+vchar = letter | other | digit
 
-opt_rval = vchars ws | vchars
-opt_lval = vchars
-option = ws 'option' ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
+
+# Option
+opt_rval = vchar ws | vchar
+opt_lval = vchar
+option = 'option' ws <opt_lval*>:lval ws <opt_rval*>:rval ';' ws
             -> ('option', lval, rval)
-         | ws <opt_lval*>:lval ws <opt_rval*>:rval ';'
+         | 'option' ws <opt_lval*>:lval ws '=' ws <opt_rval*>:rval ';' ws
             -> ('parameter', lval, rval)
-
-options = option*:opts ws -> opts
+         | <opt_lval*>:lval ws <opt_rval*>:rval ';' ws
+            -> ('parameter', lval, rval)
 
 # IPv4 Addresses
 non_zero = digit:c ?(c != '0') -> c
@@ -22,6 +26,34 @@ octet = <non_zero digit{0,2}>:d ?(int(d) < 256) -> d
 ipv4_address = <octet '.' octet '.' octet '.' octet>
 
 # Subnet Statement
-subnet_stmt = ws 'subnet' ws ipv4_address:n ws 'netmask' ws ipv4_address:m ws '{'
-                    options:opts
-              '}' -> ('subnet', {'network': n, 'netmask': m, 'body': opts})
+subnet_stmt = 'subnet' ws ipv4_address:n ws 'netmask' ws ipv4_address:m ws '{'
+                    ws stmt_list:stmts
+              '}' -> ('subnet', {'network': n, 'netmask': m, 'body': stmts})
+
+# Conditionals
+bin_operator = '=' | '<=' | '>='
+in_expr = vchar ws
+
+expr = <in_expr*>:lhs bin_operator:bop ws <in_expr*>:rhs ws -> (lhs, bop, rhs)
+        | 'exists' ws <in_expr*>:cond ws -> (cond)
+
+# TODO, else and elif
+if_stmt = 'if' ws expr:e '{' ws stmt_list:then '}' ws -> ('condition', e, 'then', then)
+
+# Host Statment
+# TODO, make hostname matching smarter
+hostname = <vchar*>
+host_stmt = 'host' ws hostname:h ws '{'
+                ws stmt_list:stmts ws
+            '}' ws -> ('host', h, stmts)
+
+
+# Pool Statment
+pool_stmt = 'pool' ws '{'
+                ws stmt_list:stmts ws
+            '}' ws -> ('pool', stmts)
+
+
+stmt = if_stmt | option | host_stmt | pool_stmt
+
+stmt_list = stmt*:s ws -> s

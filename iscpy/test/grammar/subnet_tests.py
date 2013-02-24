@@ -1,19 +1,11 @@
 import parsley
+from iscpy.test.grammar.test_utils import BaseTest, make_simple
 
-import unittest
-def make_simple(grammar, in_str, scope={}):
-    in_str = in_str.replace('\n', '').strip()
-    x = parsley.makeGrammar(grammar, scope)
-    return x(in_str).S()
 
-ISC_GRAMMAR_FILE = "/home/juber/repositories/iscpy/isc.parsley"
-
-class ISCSubnetParseTests(unittest.TestCase):
+class ISCSubnetParseTests(BaseTest):
 
     def setUp(self):
-        self.isc_grammar = ""
-        for line in open(ISC_GRAMMAR_FILE).readlines():
-            self.isc_grammar += ' ' * 12 + line
+        super(ISCSubnetParseTests, self).setUp()
 
     def test_bracket(self):
         test_param = """
@@ -22,7 +14,7 @@ class ISCSubnetParseTests(unittest.TestCase):
             }
         """
         grammar = self.isc_grammar + """
-            S = '{' options:opts ws '}' -> opts
+            S = '{' ws option*:opts '}' -> opts
         """
         self.assertEqual(
             [('parameter', 'foo', 'bar')],
@@ -39,7 +31,7 @@ class ISCSubnetParseTests(unittest.TestCase):
             }
         """
         grammar = self.isc_grammar + """
-            S = '{' options:opts ws '}' -> opts
+            S = '{' ws option*:opts '}' -> opts
         """
         self.assertEqual(
             [('parameter', 'foo', 'bar'), ('option', 'foo-option', '10.0.0.5'),
@@ -103,5 +95,35 @@ class ISCSubnetParseTests(unittest.TestCase):
                 ),
         make_simple(grammar, test_in))
 
+    def test_subnet_if(self):
+        grammar = self.isc_grammar + """
+            S = subnet_stmt
+        """
+        test_in = """
+            subnet 10.0.0.0 netmask 10.0.0.0 {
+                foo bar;
+                foo 10.0.0.0;
+                if foo = bar {
+                    option baz 10.0.0.0;
+
+                }
+                baz foo 10.1.0.0;
+            }
+        """
+        self.assertEqual(
+            (   'subnet',
+                {   'body': [   ('parameter', 'foo', 'bar'),
+                                ('parameter', 'foo', '10.0.0.0'),
+                                (   'condition',
+                                    ('foo ', '=', 'bar '),
+                                    'then',
+                                    [('option', 'baz', '10.0.0.0')]),
+                                ('parameter', 'baz', 'foo 10.1.0.0')],
+                    'netmask': '10.0.0.0',
+                    'network': '10.0.0.0'}),
+            make_simple(grammar, test_in)
+        )
+
 if __name__ == '__main__':
+    import unittest
     unittest.main()

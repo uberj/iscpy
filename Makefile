@@ -1,4 +1,5 @@
+show_grammar:
+	cat isc.parsley
 
 do_tests:
-	python option_tests.py
-	python subnet_tests.py
+	python iscpy/test/grammar/tests.py
