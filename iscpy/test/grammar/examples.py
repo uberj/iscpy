@@ -79,5 +79,17 @@ class SimpleParsley(unittest.TestCase):
         )
 
 
+    def test6(self):
+        """
+        Token built in?
+        """
+        grammar = """
+            S = token('a')
+        """
+        self.assertEqual(
+            ' a ', make_simple(grammar, 'a')
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

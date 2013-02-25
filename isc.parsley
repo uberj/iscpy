@@ -8,15 +8,17 @@ other = :c ?(c in ('-', '_', '.', "'", '"', ',', '/', '(', ')', ':')) -> c
 # value chars (non-meaningful)
 vchar = letter | other | digit
 
+keyword:k = token(k) ws -> k
+
 
 # Option
 opt_rval = vchar ws | vchar
 opt_lval = vchar
-option = 'option' ws <opt_lval*>:lval ws <opt_rval*>:rval ';' ws
+option = keyword('option') <opt_lval*>:lval ws <opt_rval*>:rval token(';') ws
             -> ('option', lval, rval)
-         | 'option' ws <opt_lval*>:lval ws '=' ws <opt_rval*>:rval ';' ws
+         | keyword('option') <opt_lval*>:lval ws token('=') ws <opt_rval*>:rval token(';') ws
             -> ('parameter', lval, rval)
-         | <opt_lval*>:lval ws <opt_rval*>:rval ';' ws
+         | <opt_lval*>:lval ws <opt_rval*>:rval token(';') ws
             -> ('parameter', lval, rval)
 
 # IPv4 Addresses
@@ -26,32 +28,32 @@ octet = <non_zero digit{0,2}>:d ?(int(d) < 256) -> d
 ipv4_address = <octet '.' octet '.' octet '.' octet>
 
 # Subnet Statement
-subnet_stmt = 'subnet' ws ipv4_address:n ws 'netmask' ws ipv4_address:m ws '{'
+subnet_stmt = keyword('subnet') ipv4_address:n ws keyword('netmask') ipv4_address:m ws token('{')
                     ws stmt_list:stmts
-              '}' -> ('subnet', {'network': n, 'netmask': m, 'body': stmts})
+              token('}') -> ('subnet', {'network': n, 'netmask': m, 'body': stmts})
 
 # Conditionals
 bin_operator = '=' | '<=' | '>='
 in_expr = vchar ws
 
 expr = <in_expr*>:lhs bin_operator:bop ws <in_expr*>:rhs ws -> (lhs, bop, rhs)
-        | 'exists' ws <in_expr*>:cond ws -> (cond)
+        | token('exists') ws <in_expr*>:cond ws -> (cond)
 
 # TODO, else and elif
-if_stmt = 'if' ws expr:e '{' ws stmt_list:then '}' ws -> ('condition', e, 'then', then)
+if_stmt = token('if') ws expr:e token('{') ws stmt_list:then token('}') ws -> ('condition', e, 'then', then)
 
 # Host Statment
 # TODO, make hostname matching smarter
 hostname = <vchar*>
-host_stmt = 'host' ws hostname:h ws '{'
+host_stmt = token('host') ws hostname:h ws token('{')
                 ws stmt_list:stmts ws
-            '}' ws -> ('host', h, stmts)
+            token('}') ws -> ('host', h, stmts)
 
 
 # Pool Statment
-pool_stmt = 'pool' ws '{'
+pool_stmt = token('pool') ws token('{')
                 ws stmt_list:stmts ws
-            '}' ws -> ('pool', stmts)
+            token('}') ws -> ('pool', stmts)
 
 
 stmt = if_stmt | option | host_stmt | pool_stmt
