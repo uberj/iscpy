@@ -1,6 +1,7 @@
 import sys
 import parsley
 import pprint
+from parsley import wrapGrammar
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -30,24 +31,35 @@ def scrub_comments(in_str):
     return new_str
 
 
-def make_simple(grammar, in_str, scope={}, strip=True):
-    in_str = scrub_comments(in_str)
-    in_str = in_str.replace('\n', '').strip()
-    # TODO, stop using ScrubComments
-    x = parsley.makeGrammar(grammar, scope)
-    return x(in_str).S()
-
 
 ISC_GRAMMAR_FILE = "/home/juber/repositories/iscpy/isc.parsley"
+grammar = open(ISC_GRAMMAR_FILE).read()
+grammar += '\nS = stmt_list'
+
+path_swap = ('/etc/dhcpconfig-autodeploy', "/home/juber/sysadmins/dhcpconfig/dhcpconfig-autodeploy/scl3")
+
+class ISCGrammar(parsley.makeGrammar(grammar, {}, unwrap=True)):
+    def resolve_include(self, path):
+        fname = path.replace(*path_swap)
+        return parse_file(fname)
+
+def construct(scope={}):
+    return wrapGrammar(ISCGrammar)
+
+def parse(in_str):
+    in_str = scrub_comments(in_str)
+    in_str = in_str.replace('\n', '').strip()
+    g = construct()
+    return g(in_str).S()
+
+def parse_file(fname):
+    contents = open(fname).read()
+    return parse(contents)
 
 def main(argv):
     fname = argv[1]
     print fname
-    contents = open(fname).read()
-    grammar = open(ISC_GRAMMAR_FILE).read()
-    grammar += '\nS = subnet_stmt'
-    contents.strip()
-    pp.pprint(make_simple(grammar, contents))
+    pp.pprint(parse_file(fname))
 
 if __name__ == '__main__':
     main(sys.argv)

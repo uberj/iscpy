@@ -175,6 +175,18 @@ class ISCOptionParseTests(BaseTest):
                 make_simple(self.test_options_grammar, test_param)
         )
 
+    def failing2(self):
+        test_param = """
+            option gpxe.bus-id         code 177 = string;
+        """
+
+        print make_simple(self.test_options_grammar, test_param)
+        return
+        self.assertEqual(
+                [('option', 'domain-name', '"mozilla.com"')],
+                make_simple(self.test_options_grammar, test_param)
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -19,6 +19,8 @@ option = keyword('option') <opt_lval*>:lval ws <opt_rval*>:rval token(';') ws
             -> ('option', lval, rval)
          | keyword('option') <opt_lval*>:lval ws token('=') ws <opt_rval*>:rval token(';') ws
             -> ('parameter', lval, rval)
+         | keyword('option') <opt_lval*>:lval ws <opt_rval*>:rval_1 token('=') ws <opt_rval*>:rval_2 token(';') ws
+            -> ('parameter', lval, rval_1 + ' = ' + rval_2)
          | <opt_lval*>:lval ws <opt_rval*>:rval token(';') ws
             -> ('parameter', lval, rval)
 
@@ -56,7 +58,11 @@ pool_stmt = token('pool') ws token('{')
                 ws stmt_list:stmts ws
             token('}') ws -> ('pool', stmts)
 
+# Include
+include = keyword('include') token('"')<(~'"' vchar)*>:path token('"') ws ';' ws
+            -> self.resolve_include(path)
 
-stmt = if_stmt | option | host_stmt | pool_stmt
+
+stmt = subnet_stmt| if_stmt | include | option | host_stmt | pool_stmt | include
 
 stmt_list = stmt*:s ws -> s
