@@ -5,3 +5,4 @@ dist
 *.pyc
 build/
 test/Makefile
+dhcpd.conf
