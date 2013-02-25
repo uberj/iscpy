@@ -36,7 +36,8 @@ ISC_GRAMMAR_FILE = "/home/juber/repositories/iscpy/isc.parsley"
 grammar = open(ISC_GRAMMAR_FILE).read()
 grammar += '\nS = stmt_list'
 
-path_swap = ('/etc/dhcpconfig-autodeploy', "/home/juber/sysadmins/dhcpconfig/dhcpconfig-autodeploy/scl3")
+path_swap = ('/etc/dhcpconfig-autodeploy',
+"/home/juber/sysadmins/dhcpconfig/dhcpconfig-autodeploy/mtv1")
 
 class ISCGrammar(parsley.makeGrammar(grammar, {}, unwrap=True)):
     def resolve_include(self, path):

@@ -58,11 +58,16 @@ pool_stmt = token('pool') ws token('{')
                 ws stmt_list:stmts ws
             token('}') ws -> ('pool', stmts)
 
+# Group Statment
+group_stmt = token('group') ws token('{')
+                ws stmt_list:stmts ws
+            token('}') ws -> ('group', stmts)
+
 # Include
 include = keyword('include') token('"')<(~'"' vchar)*>:path token('"') ws ';' ws
             -> self.resolve_include(path)
 
 
-stmt = subnet_stmt| if_stmt | include | option | host_stmt | pool_stmt | include
+stmt = subnet_stmt | if_stmt | include | option | host_stmt | pool_stmt | include | group_stmt
 
 stmt_list = stmt*:s ws -> s
