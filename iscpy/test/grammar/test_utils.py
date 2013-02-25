@@ -1,14 +1,14 @@
 import parsley
 import pprint
 import unittest
-from iscpy.iscpy_core.core import ScrubComments
+from iscpy.parse import scrub_comments
 
 pp = pprint.PrettyPrinter(indent=4)
 
-def make_simple(grammar, in_str, scope={}):
+def make_simple(grammar, in_str, scope={}, strip=True):
+    in_str = scrub_comments(in_str)
     in_str = in_str.replace('\n', '').strip()
     # TODO, stop using ScrubComments
-    in_str = ScrubComments(in_str)
     x = parsley.makeGrammar(grammar, scope)
     return x(in_str).S()
 

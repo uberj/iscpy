@@ -165,7 +165,16 @@ class ISCOptionParseTests(BaseTest):
             make_simple(self.test_options_grammar, test_param)
         )
 
+    def failing1(self):
+        test_param = """
+            option domain-name         "mozilla.com";
+        """
+
+        self.assertEqual(
+                [('option', 'domain-name', '"mozilla.com"')],
+                make_simple(self.test_options_grammar, test_param)
+        )
+
 
 if __name__ == '__main__':
-    import pdb;pdb.set_trace()
     unittest.main()
